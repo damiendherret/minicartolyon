@@ -29,7 +29,7 @@ osmTl.layerName='OSM';
 osmTl.layerId='osm';
 allLayers.push(osmTl);
 
-const orthoLyonTl = new TileLayer({opacity: 0.5, source: prepareOrthoLyonLayer()});
+const orthoLyonTl = new TileLayer({opacity: 0.95, source: prepareOrthoLyonLayer()});
 orthoLyonTl.layerName='Photo Lyon';
 orthoLyonTl.layerId='orthoLyon';
 allLayers.push(orthoLyonTl); 
