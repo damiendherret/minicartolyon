@@ -9,4 +9,58 @@ html, body {
   top: 0;
   bottom: 0;
   width: 100%;
+  z-index: 1;
+}
+
+
+/* Style for the catalog container */
+.catalog {
+  position: fixed;
+  top: 0;
+  right: -300px; /* Initially hidden off-screen */
+  width: 300px;
+  height: 100%;
+  background-color: #f4f4f4;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+  transition: right 0.3s ease; /* Smooth sliding animation */
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+/* Style for the toggle button */
+.toggle-button {
+  position: fixed;
+  right : 30px;
+  top : 30px;
+  width: 30px;
+  height: 30px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  font-weight: bold;
+  z-index: 1001;
+}
+
+/* When the catalog is open */
+.catalog.open {
+  right: 0; /* Slide into view */
+}
+
+/* Button hover effect */
+.toggle-button:hover {
+  background-color: #0056b3;
+}
+
+
+.toggle-button.open {
+  right : 330px;
+}
+
+label {
+  display: block;
+  width: 300px;
 }

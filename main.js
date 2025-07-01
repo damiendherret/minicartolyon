@@ -12,58 +12,181 @@ import WMTS from 'ol/source/WMTS.js';
 import WMTSTileGrid from 'ol/tilegrid/WMTS.js';
 
 
-//proj4.defs('EPSG:2154', '+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
-//proj4.defs("EPSG:3946","+proj=lcc +lat_0=46 +lon_0=3 +lat_1=45.25 +lat_2=46.75 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
-//register(proj4);
-
-//const projection = getProjection('EPSG:6946');
-//const projectionExtent = [0, 6000000, 1200000, 7200000];
 
 
-const projection = getProjection('EPSG:900913');
-const projectionExtent = projection.getExtent();
-const size = getWidth(projectionExtent) / 256;
-const resolutions = new Array(31);
-const matrixIds = new Array(31);
-for (let z = 0; z < 31; ++z) {
-  // generate resolutions and matrixIds arrays for this WMTS
-  resolutions[z] = size / Math.pow(2, z);
-  matrixIds[z] = 'EPSG:900913:'+z;
-}
 
-//https://data.grandlyon.com/fr/geoserv/gwc/service/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&TILEMATRIX=EPSG:900913:0&TILEMATRIXSET=EPSG:900913&TILECOL=0&TILEROW=0&LAYER=metropole-de-lyon:ima_gestion_images.imaortho2023tif500m5cmcc46&FORMAT=image/png
-//https://data.grandlyon.com/fr/geoserv/gwc/service/wmts?layer=metropole-de-lyon%3Aima_gestion_images.imaortho2023tif500m5cmcc46&style=default&tilematrixset=EPSG%3A900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=11&TileCol=1055&TileRow=730
-//https://data.grandlyon.com/geoserver/gwc/service/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=grandlyon%3Aortho_2023&STYLE=raster&FORMAT=image%2Fpng&TILEMATRIXSET=EPSG%3A4326&TILEMATRIX=EPSG%3A4326%3A16&TILEROW=16065&TILECOL=67307
+//Prepare layers
+/*var layers = [];
+layers.push (new TileLayer({source: new OSM()}));
+layers.push (new TileLayer({opacity: 0.95, source: prepareOrthoLyonLayer()}));
+layers.push (new TileLayer({opacity: 0.95, source: prepareCadastralParcelsLayer()}));*/
+
+const allLayers = [];
+
+//init layers
+const osmTl = new TileLayer({source: new OSM()})
+osmTl.layerName='OSM';
+osmTl.layerId='osm';
+allLayers.push(osmTl);
+
+const orthoLyonTl = new TileLayer({opacity: 0.5, source: prepareOrthoLyonLayer()});
+orthoLyonTl.layerName='Photo Lyon';
+orthoLyonTl.layerId='orthoLyon';
+allLayers.push(orthoLyonTl); 
+
+
+const cadastralParcelsTl = new TileLayer({opacity: 0.5, source: prepareCadastralParcelsLayer()});
+cadastralParcelsTl.layerName='Parcelles Cadastrales';
+cadastralParcelsTl.layerId='cadastralParcels';
+allLayers.push(cadastralParcelsTl);
+
+// Peupler le catalogue au chargement
+populateCatalog(allLayers);
+
+// Get references to the catalog and toggle button
+const catalog = document.getElementById('catalogContainer');
+const toggleButton = document.getElementById('toggleButton');
+
+// Add click event listener to the toggle button
+toggleButton.addEventListener('click', () => {
+  // Toggle the 'open' class on the catalog
+  catalog.classList.toggle('open');
+  toggleButton.classList.toggle('open');
+
+  // Change the arrow direction based on the catalog state
+  if (catalog.classList.contains('open')) {
+    toggleButton.textContent = '>' // '◀'; // Arrow pointing left
+  } else {
+    toggleButton.textContent = '<' //'➤'; // Arrow pointing right
+  }
+});
 
 const map = new Map({
   target: 'map',
-  layers: [
-    new TileLayer({
-      source: new OSM()
-    }),
-    new TileLayer({
-      opacity: 0.95,
-      source: new WMTS({
-        attributions: '',
-        //url: 'https://data.grandlyon.com/fr/geoserv/gwc/service/wmts',
-        url: 'https://data.grandlyon.com/geoserver/gwc/service/wmts',
-        //layer: 'metropole-de-lyon:ima_gestion_images.imaortho2023tif500m5cmcc46',
-        layer:'grandlyon:ortho_2023',
-        matrixSet: 'EPSG:900913',
-        format: 'image/png',
-        projection: projection,
-        style: 'raster',  
-        tileGrid: new WMTSTileGrid({
-          origin: getTopLeft(projectionExtent),
-          resolutions: resolutions,
-          matrixIds: matrixIds,
-        }),
-        wrapX: true,
-      }),
-    })
-  ],
+  layers: allLayers,
   view: new View({
     center: fromLonLat([4.8640, 45.8791]),
     zoom: 20
   })
 });
+
+
+
+
+
+function prepareOrthoLyonLayer (){
+  
+  //TMS
+  const projection = getProjection('EPSG:900913');
+  const projectionExtent = projection.getExtent();
+  const size = getWidth(projectionExtent) / 256;
+  const resolutions = new Array(31);
+  const matrixIds = new Array(31);
+  for (let z = 0; z < 31; ++z) {
+    // generate resolutions and matrixIds arrays for this WMTS
+    resolutions[z] = size / Math.pow(2, z);
+    matrixIds[z] = 'EPSG:900913:'+z;
+  }
+
+  //layer : 
+  return new WMTS({
+    attributions: '',
+    url: 'https://data.grandlyon.com/geoserver/gwc/service/wmts',
+    layer:'grandlyon:ortho_2023',
+    matrixSet: 'EPSG:900913',
+    format: 'image/png',
+    projection: projection,
+    style: 'raster',  
+    tileGrid: new WMTSTileGrid({
+      origin: getTopLeft(projectionExtent),
+      resolutions: resolutions,
+      matrixIds: matrixIds,
+      }),
+    })
+}
+
+
+function prepareCadastralParcelsLayer (){
+  //TMS
+  const projection = getProjection('EPSG:3857');
+  const projectionExtent = projection.getExtent();
+  const size = getWidth(projectionExtent) / 256;
+  const resolutions = new Array(20);
+  const matrixIds = new Array(20);
+  for (let z = 0; z < 20; ++z) {
+    // generate resolutions and matrixIds arrays for this WMTS
+    resolutions[z] = size / Math.pow(2, z);
+    matrixIds[z] = z;
+  }
+
+    //layer : 
+    return new WMTS({
+      attributions: '',
+      url: 'https://data.geopf.fr/wmts',
+      layer:'CADASTRALPARCELS.PARCELLAIRE_EXPRESS',
+      matrixSet: 'PM_0_19',
+      format: 'image/png',
+      projection: projection,
+      style: 'normal',  
+      tileGrid: new WMTSTileGrid({
+        origin: getTopLeft(projectionExtent),
+        resolutions: resolutions,
+        matrixIds: matrixIds,
+        }),
+      })
+
+}
+
+
+
+// Fonction pour peupler le catalogue
+function populateCatalog(layers) {
+  const container = document.getElementById('checkboxContainer');
+  container.innerHTML = ''; // Nettoyer le contenu existant
+
+  layers.forEach(layer => {
+    const label = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.name = layer.layerId;
+    checkbox.value = layer.layerId;
+    checkbox.checked = true; 
+    checkbox.addEventListener('change', event => handleLayerToggle(event, layer));
+
+    const opacitySlider = document.createElement('input');
+    opacitySlider.type = 'range';
+    opacitySlider.min = 0;
+    opacitySlider.max = 1;
+    opacitySlider.step = 0.1;
+    opacitySlider.value = layer.getOpacity();
+    opacitySlider.addEventListener('input', event => handleOpacityChange(event, layer));
+
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(layer.layerName));
+    label.appendChild(opacitySlider);
+    container.appendChild(label);
+  });
+}
+
+
+// Fonction pour gérer l'ajout/retrait des couches
+function handleLayerToggle(event, layer) {
+  if (event.target.checked) {
+    map.addLayer(layer);
+  } else {
+    map.removeLayer(layer);
+  }
+}
+
+
+// Fonction pour gérer le changement d'opacité
+function handleOpacityChange(event, layer) {
+  layer.setOpacity(parseFloat(event.target.value));
+}
+
+
+
+
+
+
+
