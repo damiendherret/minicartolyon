@@ -72,8 +72,6 @@ const map = new Map({
 
 
 
-
-
 function prepareOrthoLyonLayer (){
   
   //TMS
