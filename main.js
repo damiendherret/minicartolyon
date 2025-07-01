@@ -3,23 +3,10 @@ import {Map, View} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
 import {get as getProjection, fromLonLat} from 'ol/proj.js';
-import { register } from 'ol/proj/proj4';
-import proj4 from 'proj4';
-
-import WMTSCapabilities from 'ol/format/WMTSCapabilities.js';
 import {getTopLeft, getWidth} from 'ol/extent.js';
 import WMTS from 'ol/source/WMTS.js';
 import WMTSTileGrid from 'ol/tilegrid/WMTS.js';
 
-
-
-
-
-//Prepare layers
-/*var layers = [];
-layers.push (new TileLayer({source: new OSM()}));
-layers.push (new TileLayer({opacity: 0.95, source: prepareOrthoLyonLayer()}));
-layers.push (new TileLayer({opacity: 0.95, source: prepareCadastralParcelsLayer()}));*/
 
 const allLayers = [];
 
